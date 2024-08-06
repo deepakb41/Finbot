@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finbot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <img src="https://cdn-icons-png.flaticon.com/512/2593/2593627.png" alt="Finbot Icon" class="icon">
+                Finbot
+            </h1>
+            <p class="description">AI-powered chatbot designed to analyse corporate financial performance from 10-K and 10-Q documents.</p>
+        </div>
+        <div class="chatbox" id="chatbox">
+            <div class="message message-bot">
+                <div class="message-content">
+                    Welcome to Finbot! Upload a PDF to start.
+                </div>
+            </div>
+        </div>
+        <div class="upload-section">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <label for="fileInput" class="custom-file-upload">
+                    <input type="file" name="file" id="fileInput">
+                    Select PDF File
+                </label>
+                <button type="submit" class="btn">Upload</button>
+            </form>
+        </div>
+        <div class="input-section">
+            <input type="text" id="queryInput" placeholder="Ask a question..." class="query-input">
+            <button id="queryButton" class="btn">Send</button>
+        </div>
+        <div class="links">
+            Sample 10-K Report for 2024:
+            <a href="https://www.sec.gov/ix?doc=/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm" target="_blank">Microsoft 10-K Report 2024</a>
+            <br>Search for other 10-K and 10-Q documents:
+            <a href="https://www.sec.gov/search-filings" target="_blank">SEC Search Filings</a>
+        </div>
+    </div>
+
+    <script>
+        function appendMessage(sender, message) {
+            var chatbox = document.getElementById('chatbox');
+            var messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `message-${sender}`);
+            var messageContent = document.createElement('div');
+            messageContent.classList.add('message-content');
+            messageContent.innerText = message;
+            messageDiv.appendChild(messageContent);
+            chatbox.appendChild(messageDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData();
+            formData.append('file', document.getElementById('fileInput').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.message) {
+                      appendMessage('bot', data.message);
+                  } else {
+                      appendMessage('bot', 'Failed to upload file. Please try again.');
+                  }
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+
+        document.getElementById('queryButton').addEventListener('click', function() {
+            var query = document.getElementById('queryInput').value;
+            if (query.trim() === '') return;
+            appendMessage('user', query);
+            document.getElementById('queryInput').value = '';
+
+            fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.response) {
+                      appendMessage('bot', data.response);
+                  } else {
+                      appendMessage('bot', 'Failed to get response. Please try again.');
+                  }
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+    </script>
+</body>
+</html>

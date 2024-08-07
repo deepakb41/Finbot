@@ -82,6 +82,7 @@ overrides==7.7.0
 packaging==24.1
 posthog==3.5.0
 protobuf==4.25.4
+psycopg2-binary==2.9.9
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pydantic==2.8.2

@@ -58,12 +58,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Function to initialize ChromaDB
-def initialize_chroma():
+def initialize_chroma(chunks=None):
     try:
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        chroma_db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
-        return chroma_db
+        if chunks:
+            db = Chroma.from_documents(chunks, embedding_function, persist_directory=CHROMA_PATH)
+        else:
+            db = Chroma(embedding_function=embedding_function, persist_directory=CHROMA_PATH)
+        return db
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
         raise
@@ -114,8 +117,7 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        api_key = os.getenv("OPENAI_API_KEY")
-        db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
+        db = initialize_chroma(chunks=chunks)
 
         # Ensure the database file is writable
         for root, dirs, files in os.walk(CHROMA_PATH):
@@ -142,7 +144,7 @@ def query():
 
         api_key = os.getenv("OPENAI_API_KEY")
         model = ChatOpenAI(api_key=api_key)
-        response_text = model.predict(prompt)
+        response_text = model.invoke(prompt)  # Use invoke instead of predict
 
         return jsonify({"response": response_text})
     except Exception as e:

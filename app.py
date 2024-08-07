@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -38,13 +37,15 @@ Answer the question based on the above context: {question}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def initialize_chroma():
+def initialize_chroma(chunks=None):
     try:
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        # Use an in-memory SQLite database
-        chroma_db = Chroma(embedding_function=embedding_function, persist_directory=':memory:')
-        return chroma_db
+        if chunks:
+            db = Chroma.from_documents(chunks, embedding_function, persist_directory=':memory:')
+        else:
+            db = Chroma(embedding_function=embedding_function, persist_directory=':memory:')
+        return db
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
         raise
@@ -87,10 +88,7 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        # Initialize ChromaDB with in-memory database
-        api_key = os.getenv("OPENAI_API_KEY")
-        db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=':memory:')
-        return {"chunks": len(chunks)}
+        return {"chunks": chunks}
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
         raise
@@ -101,7 +99,11 @@ def query():
     query_text = data.get('query', '').lower()
 
     try:
-        db = initialize_chroma()
+        if 'chunks' not in request.json:
+            return jsonify({"error": "No data available. Please upload a PDF first."}), 400
+
+        chunks = request.json['chunks']
+        db = initialize_chroma(chunks=chunks)
         results = db.similarity_search_with_relevance_scores(query_text, k=3)
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
 

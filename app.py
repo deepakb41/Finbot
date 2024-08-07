@@ -25,6 +25,21 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# LangChain Configuration
+PROMPT_TEMPLATE = """
+Answer the question based only on the following context:
+
+{context}
+
+---
+
+Answer the question based on the above context: {question}
+"""
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Function to clear ChromaDB directory and create a new one
 def clear_chroma_db():
     if os.path.exists(CHROMA_PATH):
@@ -42,25 +57,6 @@ def clear_upload_folder():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
 
-# Clear the database and upload folder when the app starts
-clear_chroma_db()
-clear_upload_folder()
-
-# LangChain Configuration
-PROMPT_TEMPLATE = """
-Answer the question based only on the following context:
-
-{context}
-
----
-
-Answer the question based on the above context: {question}
-"""
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # Function to initialize ChromaDB
 def initialize_chroma(chunks=None):
     try:
@@ -75,6 +71,10 @@ def initialize_chroma(chunks=None):
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
         raise
+
+def initialize_app():
+    clear_chroma_db()
+    clear_upload_folder()
 
 @app.route('/')
 def index():
@@ -154,7 +154,7 @@ def query():
 
         api_key = os.getenv("OPENAI_API_KEY")
         model = ChatOpenAI(api_key=api_key)
-        response_text = model.predict(prompt)  # Use invoke instead of predict
+        response_text = model.invoke(prompt)  # Use invoke instead of predict
 
         return jsonify({"response": response_text})
     except Exception as e:
@@ -172,4 +172,5 @@ def reset():
         return jsonify({"error": "Failed to reset system"}), 500
 
 if __name__ == '__main__':
+    initialize_app()  # Initialize the app and clear directories before starting
     app.run(debug=True)

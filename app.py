@@ -17,23 +17,21 @@ app = Flask(__name__)
 CORS(app)
 
 # Use a writable directory on Heroku for ChromaDB
-CHROMA_PATH = os.path.join('/tmp', 'chroma')
+CHROMA_PATH = os.path.join(tempfile.gettempdir(), 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure necessary directories exist
-if not os.path.exists(CHROMA_PATH):
-    os.makedirs(CHROMA_PATH)
-
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Clear ChromaDB directory on startup
+# Clear ChromaDB directory
 def clear_chroma_db():
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
     os.makedirs(CHROMA_PATH)
 
+# Clear the database when the app starts
 clear_chroma_db()
 
 # LangChain Configuration
@@ -63,6 +61,11 @@ def initialize_chroma():
 
 @app.route('/')
 def index():
+    try:
+        # Clear the ChromaDB when the page is refreshed
+        clear_chroma_db()
+    except Exception as e:
+        logger.error(f"Error during reset on index page load: {e}")
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
@@ -102,9 +105,6 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        # Clear the temporary directory
-        clear_chroma_db()
-
         # Initialize ChromaDB
         api_key = os.getenv("OPENAI_API_KEY")
         db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
@@ -139,6 +139,7 @@ def query():
 @app.route('/reset', methods=['POST'])
 def reset():
     try:
+        # Clear the ChromaDB when the reset endpoint is called
         clear_chroma_db()
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:

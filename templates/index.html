@@ -69,13 +69,14 @@
             var fileInput = document.getElementById('fileInput');
             formData.append('file', fileInput.files[0]);
 
+            document.getElementById('progressWrapper').style.display = 'inline-flex';
+
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/upload', true);
 
             xhr.upload.onprogress = function(event) {
                 if (event.lengthComputable) {
                     var percentComplete = (event.loaded / event.total) * 100;
-                    document.getElementById('progressWrapper').style.display = 'inline-block';
                     document.getElementById('progressBar').value = percentComplete;
                 }
             };

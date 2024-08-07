@@ -165,7 +165,7 @@ body {
 }
 
 #progressWrapper {
-    display: inline-flex;
+    display: none;
     align-items: center;
     margin-left: 10px;
 }

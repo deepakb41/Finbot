@@ -16,7 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-CHROMA_PATH = 'chroma'
+# Use a temporary directory for ChromaDB to ensure it's writable on Heroku
+CHROMA_PATH = os.path.join(tempfile.gettempdir(), 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -59,10 +60,10 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        return jsonify({"error": "No file part"})
+        return jsonify({"error": "No file part"}), 400
     file = request.files['file']
     if file.filename == '':
-        return jsonify({"error": "No selected file"})
+        return jsonify({"error": "No selected file"}), 400
     if file:
         # Save file to a temporary location
         try:
@@ -71,10 +72,10 @@ def upload_file():
                 file_path = temp_file.name
             # Process the PDF and create the Chroma DB
             data = process_pdf(file_path)
-            return jsonify({"status": "success", "message": "File uploaded successfully"})
+            return jsonify({"status": "success", "message": "File uploaded successfully", "chunks": data["chunks"]})
         except Exception as e:
             logger.error(f"Error processing PDF: {e}")
-            return jsonify({"error": "Failed to process PDF"}), 500
+            return jsonify({"error": f"Failed to process PDF: {str(e)}"}), 500
         finally:
             # Clean up the temporary file
             if os.path.exists(file_path):

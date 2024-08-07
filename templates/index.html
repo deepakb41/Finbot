@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finbot</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
@@ -61,4 +61,64 @@
 
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
-     
+            var formData = new FormData();
+            var fileInput = document.getElementById('fileInput');
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      appendMessage('bot', data.message);
+                  } else {
+                      appendMessage('bot', 'Failed to upload file. Please try again.');
+                  }
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+
+        document.getElementById('queryButton').addEventListener('click', function() {
+            var queryInput = document.getElementById('queryInput');
+            var query = queryInput.value;
+            queryInput.value = '';
+
+            appendMessage('user', query);
+
+            fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            }).then(response => response.json())
+              .then(data => {
+                  appendMessage('bot', data.response);
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+
+        document.getElementById('resetButton').addEventListener('click', function() {
+            fetch('/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      appendMessage('bot', data.message);
+                      document.getElementById('chatbox').innerHTML = '';
+                  } else {
+                      appendMessage('bot', 'Failed to reset. Please try again.');
+                  }
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+    </script>
+</body>
+</html>

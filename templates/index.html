@@ -29,6 +29,9 @@
                     Select PDF File
                 </label>
                 <button type="submit" class="btn">Upload</button>
+                <div id="progressWrapper">
+                    <progress id="progressBar" value="0" max="100"></progress>
+                </div>
             </form>
         </div>
         <div class="input-section">
@@ -65,19 +68,31 @@
             var fileInput = document.getElementById('fileInput');
             formData.append('file', fileInput.files[0]);
 
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.status === 'success') {
-                      appendMessage('bot', data.message);
-                  } else {
-                      appendMessage('bot', 'Failed to upload file. Please try again.');
-                  }
-              }).catch(error => {
-                  appendMessage('bot', 'Error occurred: ' + error.message);
-              });
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    var percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progressBar').value = percentComplete;
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.status === 'success') {
+                        appendMessage('bot', data.message);
+                    } else {
+                        appendMessage('bot', 'Failed to upload file. Please try again.');
+                    }
+                } else {
+                    appendMessage('bot', 'Error occurred: ' + xhr.statusText);
+                }
+                document.getElementById('progressBar').value = 0;
+            };
+
+            xhr.send(formData);
         });
 
         document.getElementById('queryButton').addEventListener('click', function() {

@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -17,7 +16,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Use PostgreSQL database URL for ChromaDB
-CHROMA_PATH = os.getenv('DATABASE_URL', 'sqlite:///tmp/chroma.db')
+CHROMA_PATH = os.getenv('DATABASE_URL')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -57,11 +56,6 @@ def initialize_chroma(clear_db=False):
 
 @app.route('/')
 def index():
-    try:
-        # Clear and reinitialize ChromaDB
-        initialize_chroma(clear_db=True)
-    except Exception as e:
-        logger.error(f"Error during reset on index page load: {e}")
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])

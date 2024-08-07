@@ -25,14 +25,22 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Function to clear ChromaDB directory and create a new one
 def clear_chroma_db():
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
     os.makedirs(CHROMA_PATH, exist_ok=True)
     os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
 
-# Clear the database when the app starts
+# Function to clear the UPLOAD_FOLDER
+def clear_upload_folder():
+    if os.path.exists(UPLOAD_FOLDER):
+        shutil.rmtree(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Clear the database and upload folder when the app starts
 clear_chroma_db()
+clear_upload_folder()
 
 # LangChain Configuration
 PROMPT_TEMPLATE = """
@@ -49,6 +57,7 @@ Answer the question based on the above context: {question}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Function to initialize ChromaDB
 def initialize_chroma():
     try:
         api_key = os.getenv("OPENAI_API_KEY")
@@ -63,12 +72,15 @@ def initialize_chroma():
 def index():
     try:
         clear_chroma_db()
+        clear_upload_folder()
     except Exception as e:
         logger.error(f"Error during reset on index page load: {e}")
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    clear_chroma_db()  # Clear the database whenever a new file is uploaded
+    clear_upload_folder()  # Clear the upload folder whenever a new file is uploaded
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     file = request.files['file']
@@ -88,6 +100,7 @@ def upload_file():
             if os.path.exists(file_path):
                 os.remove(file_path)
 
+# Function to process the uploaded PDF and create ChromaDB
 def process_pdf(file_path):
     try:
         loader = PyPDFLoader(file_path)
@@ -101,7 +114,6 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        clear_chroma_db()
         api_key = os.getenv("OPENAI_API_KEY")
         db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
 
@@ -141,6 +153,7 @@ def query():
 def reset():
     try:
         clear_chroma_db()
+        clear_upload_folder()
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:
         logger.error(f"Error during reset: {e}")

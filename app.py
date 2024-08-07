@@ -5,7 +5,7 @@ import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_chroma import Chroma
+from langchain.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
 import tempfile
 import logging
@@ -16,25 +16,12 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a temporary directory for ChromaDB to ensure it's writable on Heroku
-CHROMA_PATH = os.path.join(tempfile.gettempdir(), 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure necessary directories exist
-if not os.path.exists(CHROMA_PATH):
-    os.makedirs(CHROMA_PATH)
-
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
-# Clear ChromaDB directory on startup
-def clear_chroma_db():
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
-    os.makedirs(CHROMA_PATH)
-
-clear_chroma_db()
 
 # LangChain Configuration
 PROMPT_TEMPLATE = """
@@ -51,15 +38,7 @@ Answer the question based on the above context: {question}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def initialize_chroma():
-    try:
-        # Ensure ChromaDB is initialized correctly
-        api_key = os.getenv("OPENAI_API_KEY")
-        embedding_function = OpenAIEmbeddings(api_key=api_key)
-        return Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
-    except Exception as e:
-        logger.error(f"Error initializing Chroma: {e}")
-        raise
+vector_store = None
 
 @app.route('/')
 def index():
@@ -78,7 +57,7 @@ def upload_file():
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 file.save(temp_file.name)
                 file_path = temp_file.name
-            # Process the PDF and create the Chroma DB
+            # Process the PDF and create the FAISS DB
             data = process_pdf(file_path)
             return jsonify({"status": "success", "message": "File uploaded successfully", "chunks": data["chunks"]})
         except Exception as e:
@@ -90,6 +69,7 @@ def upload_file():
                 os.remove(file_path)
 
 def process_pdf(file_path):
+    global vector_store
     try:
         loader = PyPDFLoader(file_path)
         pages = loader.load_and_split()
@@ -102,12 +82,10 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        # Clear the temporary directory
-        clear_chroma_db()
-
-        # Initialize ChromaDB
+        # Initialize FAISS DB
         api_key = os.getenv("OPENAI_API_KEY")
-        db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
+        embedding_function = OpenAIEmbeddings(api_key=api_key)
+        vector_store = FAISS.from_documents(chunks, embedding_function)
         return {"chunks": len(chunks)}
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
@@ -115,13 +93,12 @@ def process_pdf(file_path):
 
 @app.route('/query', methods=['POST'])
 def query():
+    global vector_store
     data = request.json
     query_text = data.get('query', '').lower()
 
     try:
-        db = initialize_chroma()
-
-        results = db.similarity_search_with_relevance_scores(query_text, k=3)
+        results = vector_store.similarity_search_with_relevance_scores(query_text, k=3)
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
         
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
@@ -138,8 +115,9 @@ def query():
 
 @app.route('/reset', methods=['POST'])
 def reset():
+    global vector_store
     try:
-        clear_chroma_db()
+        vector_store = None
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:
         logger.error(f"Error during reset: {e}")

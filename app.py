@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
+import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -16,7 +17,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Use PostgreSQL database URL for ChromaDB
-CHROMA_PATH = os.getenv('DATABASE_URL')
+CHROMA_PATH = os.getenv('DATABASE_URL', 'sqlite:///tmp/chroma.db')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -39,11 +40,16 @@ Answer the question based on the above context: {question}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def initialize_chroma():
+def initialize_chroma(clear_db=False):
     try:
-        # Ensure ChromaDB is initialized correctly
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
+        
+        if clear_db:
+            # Clear the Chroma database
+            if os.path.exists(CHROMA_PATH):
+                shutil.rmtree(CHROMA_PATH)
+        
         return Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
@@ -51,6 +57,11 @@ def initialize_chroma():
 
 @app.route('/')
 def index():
+    try:
+        # Clear and reinitialize ChromaDB
+        initialize_chroma(clear_db=True)
+    except Exception as e:
+        logger.error(f"Error during reset on index page load: {e}")
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
@@ -125,7 +136,7 @@ def query():
 def reset():
     try:
         # Clear and reinitialize ChromaDB
-        initialize_chroma()
+        initialize_chroma(clear_db=True)
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:
         logger.error(f"Error during reset: {e}")

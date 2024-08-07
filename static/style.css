@@ -175,3 +175,8 @@ body {
     height: 20px;
     margin-left: 10px;
 }
+
+#processingText {
+    display: none;
+    margin-left: 10px;
+}

@@ -16,8 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a writable directory for ChromaDB inside the current working directory
-CHROMA_PATH = os.path.join(os.getcwd(), 'chroma')
+# Use a writable directory for ChromaDB inside the /tmp directory
+CHROMA_PATH = os.path.join('/tmp', 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -30,6 +30,24 @@ def clear_chroma_db():
         shutil.rmtree(CHROMA_PATH)
     os.makedirs(CHROMA_PATH, exist_ok=True)
     os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
+
+# Clear the database when the app starts
+clear_chroma_db()
+
+# LangChain Configuration
+PROMPT_TEMPLATE = """
+Answer the question based only on the following context:
+
+{context}
+
+---
+
+Answer the question based on the above context: {question}
+"""
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def initialize_chroma():
     try:

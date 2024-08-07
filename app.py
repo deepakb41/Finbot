@@ -16,8 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a writable directory for ChromaDB
-CHROMA_PATH = os.path.join('/tmp', 'chroma')
+# Use a writable directory for ChromaDB inside the current working directory
+CHROMA_PATH = os.path.join(os.getcwd(), 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -29,7 +29,8 @@ if not os.path.exists(UPLOAD_FOLDER):
 def clear_chroma_db():
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
-    os.makedirs(CHROMA_PATH)
+    os.makedirs(CHROMA_PATH, exist_ok=True)
+    os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
 
 # Clear the database when the app starts
 clear_chroma_db()
@@ -54,7 +55,8 @@ def initialize_chroma():
         # Ensure ChromaDB is initialized correctly
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        return Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+        chroma_db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+        return chroma_db
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
         raise
@@ -104,6 +106,9 @@ def process_pdf(file_path):
             is_separator_regex=False,
         )
         chunks = text_splitter.split_documents(pages)
+
+        # Clear ChromaDB before processing the PDF
+        clear_chroma_db()
 
         # Initialize ChromaDB
         api_key = os.getenv("OPENAI_API_KEY")

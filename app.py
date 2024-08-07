@@ -25,34 +25,14 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Clear ChromaDB directory
 def clear_chroma_db():
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
     os.makedirs(CHROMA_PATH, exist_ok=True)
     os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
 
-# Clear the database when the app starts
-clear_chroma_db()
-
-# LangChain Configuration
-PROMPT_TEMPLATE = """
-Answer the question based only on the following context:
-
-{context}
-
----
-
-Answer the question based on the above context: {question}
-"""
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 def initialize_chroma():
     try:
-        # Ensure ChromaDB is initialized correctly
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
         chroma_db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
@@ -64,7 +44,6 @@ def initialize_chroma():
 @app.route('/')
 def index():
     try:
-        # Clear the ChromaDB when the page is refreshed
         clear_chroma_db()
     except Exception as e:
         logger.error(f"Error during reset on index page load: {e}")
@@ -78,19 +57,16 @@ def upload_file():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
     if file:
-        # Save file to a temporary location
         try:
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 file.save(temp_file.name)
                 file_path = temp_file.name
-            # Process the PDF and create the Chroma DB
             data = process_pdf(file_path)
             return jsonify({"status": "success", "message": "File uploaded successfully", "chunks": data["chunks"]})
         except Exception as e:
             logger.error(f"Error processing PDF: {e}")
             return jsonify({"error": f"Failed to process PDF: {str(e)}"}), 500
         finally:
-            # Clean up the temporary file
             if os.path.exists(file_path):
                 os.remove(file_path)
 
@@ -107,12 +83,15 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        # Clear ChromaDB before processing the PDF
         clear_chroma_db()
-
-        # Initialize ChromaDB
         api_key = os.getenv("OPENAI_API_KEY")
         db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
+
+        # Ensure the database file is writable
+        for root, dirs, files in os.walk(CHROMA_PATH):
+            for file in files:
+                os.chmod(os.path.join(root, file), 0o666)
+
         return {"chunks": len(chunks)}
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
@@ -125,10 +104,9 @@ def query():
 
     try:
         db = initialize_chroma()
-
         results = db.similarity_search_with_relevance_scores(query_text, k=3)
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
-        
+
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
         prompt = prompt_template.format(context=context_text, question=query_text)
 
@@ -144,7 +122,6 @@ def query():
 @app.route('/reset', methods=['POST'])
 def reset():
     try:
-        # Clear the ChromaDB when the reset endpoint is called
         clear_chroma_db()
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:

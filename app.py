@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -16,25 +15,14 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a temporary directory for ChromaDB to ensure it's writable on Heroku
-CHROMA_PATH = os.path.join(tempfile.gettempdir(), 'chroma')
+# Use PostgreSQL database URL for ChromaDB
+CHROMA_PATH = os.getenv('DATABASE_URL')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure necessary directories exist
-if not os.path.exists(CHROMA_PATH):
-    os.makedirs(CHROMA_PATH)
-
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
-# Clear ChromaDB directory on startup
-def clear_chroma_db():
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
-    os.makedirs(CHROMA_PATH)
-
-clear_chroma_db()
 
 # LangChain Configuration
 PROMPT_TEMPLATE = """
@@ -102,9 +90,6 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        # Clear the temporary directory
-        clear_chroma_db()
-
         # Initialize ChromaDB
         api_key = os.getenv("OPENAI_API_KEY")
         db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
@@ -139,7 +124,8 @@ def query():
 @app.route('/reset', methods=['POST'])
 def reset():
     try:
-        clear_chroma_db()
+        # Clear and reinitialize ChromaDB
+        initialize_chroma()
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:
         logger.error(f"Error during reset: {e}")

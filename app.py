@@ -16,8 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a temporary directory for ChromaDB to ensure it's writable on Heroku
-CHROMA_PATH = os.path.join(tempfile.gettempdir(), 'chroma')
+# Use a writable directory on Heroku for ChromaDB
+CHROMA_PATH = os.path.join('/tmp', 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 

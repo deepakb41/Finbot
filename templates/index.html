@@ -75,10 +75,13 @@
                 if (event.lengthComputable) {
                     var percentComplete = (event.loaded / event.total) * 100;
                     document.getElementById('progressBar').value = percentComplete;
+                    document.getElementById('progressWrapper').style.display = 'block';
                 }
             };
 
             xhr.onload = function() {
+                document.getElementById('progressWrapper').style.display = 'none';
+                document.getElementById('progressBar').value = 0;
                 if (xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
                     if (data.status === 'success') {
@@ -89,7 +92,6 @@
                 } else {
                     appendMessage('bot', 'Error occurred: ' + xhr.statusText);
                 }
-                document.getElementById('progressBar').value = 0;
             };
 
             xhr.send(formData);

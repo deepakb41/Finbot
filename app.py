@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
+import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -15,12 +16,23 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+# Use a writable directory for ChromaDB inside the /tmp directory
+CHROMA_PATH = os.path.join('/tmp', 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure necessary directories exist
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+def clear_chroma_db():
+    if os.path.exists(CHROMA_PATH):
+        shutil.rmtree(CHROMA_PATH)
+    os.makedirs(CHROMA_PATH, exist_ok=True)
+    os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
+
+# Clear the database when the app starts
+clear_chroma_db()
 
 # LangChain Configuration
 PROMPT_TEMPLATE = """
@@ -37,21 +49,22 @@ Answer the question based on the above context: {question}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def initialize_chroma(chunks=None):
+def initialize_chroma():
     try:
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        if chunks:
-            db = Chroma.from_documents(chunks, embedding_function, persist_directory=':memory:')
-        else:
-            db = Chroma(embedding_function=embedding_function, persist_directory=':memory:')
-        return db
+        chroma_db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+        return chroma_db
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
         raise
 
 @app.route('/')
 def index():
+    try:
+        clear_chroma_db()
+    except Exception as e:
+        logger.error(f"Error during reset on index page load: {e}")
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
@@ -88,7 +101,16 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        return {"chunks": chunks}
+        clear_chroma_db()
+        api_key = os.getenv("OPENAI_API_KEY")
+        db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
+
+        # Ensure the database file is writable
+        for root, dirs, files in os.walk(CHROMA_PATH):
+            for file in files:
+                os.chmod(os.path.join(root, file), 0o666)
+
+        return {"chunks": len(chunks)}
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
         raise
@@ -99,11 +121,7 @@ def query():
     query_text = data.get('query', '').lower()
 
     try:
-        if 'chunks' not in request.json:
-            return jsonify({"error": "No data available. Please upload a PDF first."}), 400
-
-        chunks = request.json['chunks']
-        db = initialize_chroma(chunks=chunks)
+        db = initialize_chroma()
         results = db.similarity_search_with_relevance_scores(query_text, k=3)
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
 
@@ -122,6 +140,7 @@ def query():
 @app.route('/reset', methods=['POST'])
 def reset():
     try:
+        clear_chroma_db()
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:
         logger.error(f"Error during reset: {e}")

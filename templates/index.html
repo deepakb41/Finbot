@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finbot</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -112,6 +112,7 @@
                   if (data.status === 'success') {
                       appendMessage('bot', data.message);
                       document.getElementById('chatbox').innerHTML = '';
+                      appendMessage('bot', 'Welcome to Finbot! Upload a PDF to start.');
                   } else {
                       appendMessage('bot', 'Failed to reset. Please try again.');
                   }

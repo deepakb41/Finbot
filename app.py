@@ -16,7 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a writable directory on Railway for ChromaDB
+# Use a writable directory for ChromaDB
 CHROMA_PATH = os.path.join('/tmp', 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

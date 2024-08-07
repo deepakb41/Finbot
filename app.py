@@ -108,7 +108,6 @@ def process_pdf(file_path):
         # Initialize ChromaDB
         api_key = os.getenv("OPENAI_API_KEY")
         db = Chroma.from_documents(chunks, OpenAIEmbeddings(api_key=api_key), persist_directory=CHROMA_PATH)
-        db.persist()  # Ensure persistence
         return {"chunks": len(chunks)}
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")

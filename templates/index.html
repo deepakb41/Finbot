@@ -30,6 +30,9 @@
                 </label>
                 <button type="submit" class="btn">Upload</button>
             </form>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
         </div>
         <div class="input-section">
             <input type="text" id="queryInput" placeholder="Ask a question..." class="query-input">
@@ -56,24 +59,51 @@
             chatbox.scrollTop = chatbox.scrollHeight;
         }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clear previous chat messages and reset progress bar
+            document.getElementById('chatbox').innerHTML = '<div class="message message-bot"><div class="message-content">Welcome to Finbot! Upload a PDF to start.</div></div>';
+            document.getElementById('progressBar').style.width = '0%';
+        });
+
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
             var formData = new FormData();
             formData.append('file', document.getElementById('fileInput').files[0]);
 
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.message) {
-                      appendMessage('bot', data.message);
-                  } else {
-                      appendMessage('bot', 'Failed to upload file. Please try again.');
-                  }
-              }).catch(error => {
-                  appendMessage('bot', 'Error occurred: ' + error.message);
-              });
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    var percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progressBar').style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            appendMessage('bot', response.message);
+                        } else {
+                            appendMessage('bot', 'Failed to upload file. Please try again.');
+                        }
+                    } catch (e) {
+                        appendMessage('bot', 'Error occurred: ' + e.message);
+                    }
+                } else {
+                    appendMessage('bot', 'Error occurred: ' + xhr.statusText);
+                }
+                document.getElementById('progressBar').style.width = '0%';
+            };
+
+            xhr.onerror = function() {
+                appendMessage('bot', 'Error occurred during file upload.');
+                document.getElementById('progressBar').style.width = '0%';
+            };
+
+            xhr.send(formData);
         });
 
         document.getElementById('queryButton').addEventListener('click', function() {

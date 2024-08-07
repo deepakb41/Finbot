@@ -28,6 +28,14 @@ if not os.path.exists(CHROMA_PATH):
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Clear ChromaDB directory on startup
+def clear_chroma_db():
+    if os.path.exists(CHROMA_PATH):
+        shutil.rmtree(CHROMA_PATH)
+    os.makedirs(CHROMA_PATH)
+
+clear_chroma_db()
+
 # LangChain Configuration
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
@@ -94,10 +102,8 @@ def process_pdf(file_path):
         )
         chunks = text_splitter.split_documents(pages)
 
-        if os.path.exists(CHROMA_PATH):
-            shutil.rmtree(CHROMA_PATH)
-
-        os.makedirs(CHROMA_PATH)
+        # Clear the temporary directory
+        clear_chroma_db()
 
         # Initialize ChromaDB
         api_key = os.getenv("OPENAI_API_KEY")

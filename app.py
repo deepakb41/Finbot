@@ -16,6 +16,14 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+# Clear ChromaDB directory on startup
+def clear_chroma_db():
+    if os.path.exists(CHROMA_PATH):
+        shutil.rmtree(CHROMA_PATH)
+    os.makedirs(CHROMA_PATH)
+
+clear_chroma_db()
+
 # Use a temporary directory for ChromaDB to ensure it's writable on Heroku
 CHROMA_PATH = os.path.join(tempfile.gettempdir(), 'chroma')
 UPLOAD_FOLDER = 'uploads'
@@ -28,13 +36,7 @@ if not os.path.exists(CHROMA_PATH):
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Clear ChromaDB directory on startup
-def clear_chroma_db():
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
-    os.makedirs(CHROMA_PATH)
 
-clear_chroma_db()
 
 # LangChain Configuration
 PROMPT_TEMPLATE = """

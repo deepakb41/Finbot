@@ -28,15 +28,19 @@ if not os.path.exists(UPLOAD_FOLDER):
 # Function to clear ChromaDB directory and create a new one
 def clear_chroma_db():
     if os.path.exists(CHROMA_PATH):
+        logger.info(f"Clearing ChromaDB directory: {CHROMA_PATH}")
         shutil.rmtree(CHROMA_PATH)
     os.makedirs(CHROMA_PATH, exist_ok=True)
     os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
+    logger.info(f"ChromaDB directory created and permissions set: {CHROMA_PATH}")
 
 # Function to clear the UPLOAD_FOLDER
 def clear_upload_folder():
     if os.path.exists(UPLOAD_FOLDER):
+        logger.info(f"Clearing upload folder: {UPLOAD_FOLDER}")
         shutil.rmtree(UPLOAD_FOLDER)
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
 
 # Clear the database and upload folder when the app starts
 clear_chroma_db()
@@ -66,6 +70,7 @@ def initialize_chroma(chunks=None):
             db = Chroma.from_documents(chunks, embedding_function, persist_directory=CHROMA_PATH)
         else:
             db = Chroma(embedding_function=embedding_function, persist_directory=CHROMA_PATH)
+        logger.info("ChromaDB initialized successfully")
         return db
     except Exception as e:
         logger.error(f"Error initializing Chroma: {e}")
@@ -91,6 +96,7 @@ def upload_file():
         return jsonify({"error": "No selected file"}), 400
     if file:
         try:
+            logger.info(f"Uploading file: {file.filename}")
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 file.save(temp_file.name)
                 file_path = temp_file.name
@@ -102,12 +108,14 @@ def upload_file():
         finally:
             if os.path.exists(file_path):
                 os.remove(file_path)
+                logger.info(f"Temporary file deleted: {file_path}")
 
 # Function to process the uploaded PDF and create ChromaDB
 def process_pdf(file_path):
     try:
         loader = PyPDFLoader(file_path)
         pages = loader.load_and_split()
+        logger.info(f"PDF loaded and split into {len(pages)} pages")
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=2000,
@@ -116,6 +124,7 @@ def process_pdf(file_path):
             is_separator_regex=False,
         )
         chunks = text_splitter.split_documents(pages)
+        logger.info(f"Document split into {len(chunks)} chunks")
 
         db = initialize_chroma(chunks=chunks)
 
@@ -123,6 +132,7 @@ def process_pdf(file_path):
         for root, dirs, files in os.walk(CHROMA_PATH):
             for file in files:
                 os.chmod(os.path.join(root, file), 0o666)
+                logger.info(f"Set writable permission for file: {file}")
 
         return {"chunks": len(chunks)}
     except Exception as e:
@@ -144,7 +154,7 @@ def query():
 
         api_key = os.getenv("OPENAI_API_KEY")
         model = ChatOpenAI(api_key=api_key)
-        response_text = model.invoke(prompt)  # Use invoke instead of predict
+        response_text = model.predict(prompt)  # Use invoke instead of predict
 
         return jsonify({"response": response_text})
     except Exception as e:

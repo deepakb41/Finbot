@@ -154,7 +154,10 @@ def query():
 
         api_key = os.getenv("OPENAI_API_KEY")
         model = ChatOpenAI(api_key=api_key)
-        response_text = model.invoke(prompt)  # Use invoke instead of predict
+        response = model.invoke(prompt)  # Use invoke instead of predict
+
+        # Extract the response text from the model's response
+        response_text = response["choices"][0]["message"]["content"]
 
         return jsonify({"response": response_text})
     except Exception as e:

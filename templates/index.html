@@ -31,7 +31,7 @@
                 <button type="submit" class="btn">Upload</button>
                 <div id="progressWrapper">
                     <progress id="progressBar" value="0" max="100"></progress>
-                    <div id="processingText" style="display: none;">Processing...</div>
+                    <span id="processingText">Processing...</span>
                 </div>
             </form>
         </div>
@@ -75,11 +75,8 @@
             xhr.upload.onprogress = function(event) {
                 if (event.lengthComputable) {
                     var percentComplete = (event.loaded / event.total) * 100;
-                    document.getElementById('progressWrapper').style.display = 'block';
+                    document.getElementById('progressWrapper').style.display = 'inline-block';
                     document.getElementById('progressBar').value = percentComplete;
-                    if (percentComplete === 100) {
-                        document.getElementById('processingText').style.display = 'inline';
-                    }
                 }
             };
 
@@ -96,7 +93,6 @@
                 }
                 document.getElementById('progressBar').value = 0;
                 document.getElementById('progressWrapper').style.display = 'none';
-                document.getElementById('processingText').style.display = 'none';
             };
 
             xhr.send(formData);

@@ -115,6 +115,11 @@ body {
     align-items: center;
 }
 
+.upload-section {
+    display: flex;
+    align-items: center;
+}
+
 .custom-file-upload {
     border: 1px solid #ccc;
     display: inline-block;
@@ -166,11 +171,17 @@ body {
 
 #progressWrapper {
     display: none;
-    width: 100%;
-    margin-top: 10px;
+    margin-left: 10px;
 }
 
 progress {
-    width: 100%;
+    width: 200px;
     height: 20px;
+}
+
+#processingText {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 14px;
+    color: #4CAF50;
 }

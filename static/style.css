@@ -1,7 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
+    background-color: #f9f9f9;
     margin: 0;
     padding: 0;
     display: flex;
@@ -11,139 +10,123 @@ body {
 }
 
 .container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 800px;
-    height: 90vh;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
     border-radius: 8px;
-    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .header {
-    padding: 20px;
-    background-color: #4CAF50;
-    color: white;
     text-align: center;
+    margin-bottom: 20px;
 }
 
 .header h1 {
+    font-size: 24px;
     margin: 0;
-    font-size: 2em;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.header h1 .icon {
+.header h1 img.icon {
     width: 40px;
     height: 40px;
     margin-right: 10px;
 }
 
 .description {
-    margin: 10px 0 0;
-    font-size: 1em;
+    font-size: 14px;
+    color: #666666;
+}
+
+.chatbox {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    background-color: #fdfdfd;
+}
+
+.message {
+    margin-bottom: 10px;
+}
+
+.message-bot .message-content {
+    background-color: #e0f7fa;
+    color: #00796b;
+}
+
+.message-user .message-content {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+.message-content {
+    padding: 10px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.upload-section,
+.input-section,
+.reset-section {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+    background-color: #2196f3;
+    color: white;
+    border-radius: 4px;
+    border: 1px solid #0b7dda;
+}
+
+.custom-file-upload:hover {
+    background-color: #0b7dda;
+}
+
+.btn {
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #0b7dda;
+}
+
+.query-input {
+    width: calc(100% - 100px);
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-right: 10px;
+    box-sizing: border-box;
 }
 
 .links {
-    padding: 10px;
-    background-color: #f4f4f9;
+    font-size: 14px;
     text-align: center;
-    font-size: 13px;
-}
-
-.links p {
-    margin: 5px 0;
+    margin-top: 10px;
 }
 
 .links a {
-    color: #4CAF50;
+    color: #2196f3;
     text-decoration: none;
-    
 }
 
 .links a:hover {
     text-decoration: underline;
-}
-
-.chatbox {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-}
-
-.message {
-    display: flex;
-    margin: 10px 0;
-}
-
-.message-user {
-    justify-content: flex-end;
-}
-
-.message-bot {
-    justify-content: flex-start;
-}
-
-.message-content {
-    max-width: 70%;
-    padding: 10px;
-    border-radius: 10px;
-}
-
-.message-user .message-content {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.message-bot .message-content {
-    background-color: #e1f5fe;
-    color: #0277bd;
-}
-
-.upload-section,
-.input-section {
-    padding: 10px;
-    border-top: 1px solid #ccc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.custom-file-upload {
-    border: 1px solid #ccc;
-    display: inline-block;
-    padding: 6px 12px;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: #fff;
-    border-radius: 4px;
-    margin-right: 10px;
-}
-
-.btn {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-.query-input {
-    flex: 1;
-    padding: 10px;
-    margin-right: 10px;
-    box-sizing: border-box;
-    border: 2px solid #ccc;
 }

@@ -136,5 +136,14 @@ def query():
         logger.error(f"Error during query processing: {e}")
         return jsonify({"error": "Failed to process query"}), 500
 
+@app.route('/reset', methods=['POST'])
+def reset():
+    try:
+        clear_chroma_db()
+        return jsonify({"status": "success", "message": "System reset successfully"})
+    except Exception as e:
+        logger.error(f"Error during reset: {e}")
+        return jsonify({"error": "Failed to reset system"}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

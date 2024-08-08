@@ -17,16 +17,19 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Use a writable directory for ChromaDB inside the /tmp directory
+# Define paths
 CHROMA_PATH = os.path.join('/tmp', 'chroma')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure necessary directories exist
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# LangChain Configuration
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Prompt template for LangChain
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
 
@@ -37,62 +40,44 @@ Answer the question based only on the following context:
 Answer the question based on the above context: {question}
 """
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Function to clear ChromaDB directory and create a new one
 def clear_chroma_db():
-    try:
-        if os.path.exists(CHROMA_PATH):
-            logger.info(f"Clearing ChromaDB directory: {CHROMA_PATH}")
-            shutil.rmtree(CHROMA_PATH)
-        os.makedirs(CHROMA_PATH, exist_ok=True)
-        os.chmod(CHROMA_PATH, 0o777)  # Ensure the directory is writable
-        logger.info(f"ChromaDB directory created and permissions set: {CHROMA_PATH}")
-    except Exception as e:
-        logger.error(f"Error clearing ChromaDB directory: {e}")
+    """Clear ChromaDB directory and set permissions."""
+    if os.path.exists(CHROMA_PATH):
+        logger.info(f"Clearing ChromaDB directory: {CHROMA_PATH}")
+        shutil.rmtree(CHROMA_PATH)
+    os.makedirs(CHROMA_PATH, exist_ok=True)
+    os.chmod(CHROMA_PATH, 0o777)
+    logger.info(f"ChromaDB directory created and permissions set: {CHROMA_PATH}")
 
-# Function to clear the UPLOAD_FOLDER
 def clear_upload_folder():
-    try:
-        if os.path.exists(UPLOAD_FOLDER):
-            logger.info(f"Clearing upload folder: {UPLOAD_FOLDER}")
-            shutil.rmtree(UPLOAD_FOLDER)
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
-    except Exception as e:
-        logger.error(f"Error clearing upload folder: {e}")
+    """Clear upload folder and set permissions."""
+    if os.path.exists(UPLOAD_FOLDER):
+        logger.info(f"Clearing upload folder: {UPLOAD_FOLDER}")
+        shutil.rmtree(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
 
-# Function to ensure permissions are set correctly for ChromaDB files
 def set_chroma_db_permissions():
-    try:
-        for root, dirs, files in os.walk(CHROMA_PATH):
-            for file in files:
-                os.chmod(os.path.join(root, file), 0o666)
-                logger.info(f"Set writable permission for file: {file}")
-    except Exception as e:
-        logger.error(f"Error setting permissions for ChromaDB files: {e}")
+    """Set writable permissions for all files in ChromaDB directory."""
+    for root, dirs, files in os.walk(CHROMA_PATH):
+        for file in files:
+            os.chmod(os.path.join(root, file), 0o666)
+            logger.info(f"Set writable permission for file: {file}")
 
-# Function to initialize ChromaDB
 def initialize_chroma(chunks=None):
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        embedding_function = OpenAIEmbeddings(api_key=api_key)
-        if chunks:
-            db = Chroma.from_documents(chunks, embedding_function, persist_directory=CHROMA_PATH)
-        else:
-            db = Chroma(embedding_function=embedding_function, persist_directory=CHROMA_PATH)
-        logger.info("ChromaDB initialized successfully")
-
-        set_chroma_db_permissions()  # Ensure permissions are set correctly
-
-        return db
-    except Exception as e:
-        logger.error(f"Error initializing Chroma: {e}")
-        raise
+    """Initialize ChromaDB with optional document chunks."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    embedding_function = OpenAIEmbeddings(api_key=api_key)
+    if chunks:
+        db = Chroma.from_documents(chunks, embedding_function, persist_directory=CHROMA_PATH)
+    else:
+        db = Chroma(embedding_function=embedding_function, persist_directory=CHROMA_PATH)
+    logger.info("ChromaDB initialized successfully")
+    set_chroma_db_permissions()
+    return db
 
 def initialize_app():
+    """Initialize the application by clearing directories."""
     clear_chroma_db()
     clear_upload_folder()
 
@@ -107,21 +92,20 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    clear_chroma_db()
+    clear_upload_folder()
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
     try:
-        clear_chroma_db()  # Clear the database whenever a new file is uploaded
-        clear_upload_folder()  # Clear the upload folder whenever a new file is uploaded
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-        if file:
-            logger.info(f"Uploading file: {file.filename}")
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                file.save(temp_file.name)
-                file_path = temp_file.name
-            data = process_pdf(file_path)
-            return jsonify({"status": "success", "message": "File uploaded successfully", "chunks": data["chunks"]})
+        logger.info(f"Uploading file: {file.filename}")
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file.name)
+            file_path = temp_file.name
+        data = process_pdf(file_path)
+        return jsonify({"status": "success", "message": "File uploaded successfully", "chunks": data["chunks"]})
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
         return jsonify({"error": f"Failed to process PDF: {str(e)}"}), 500
@@ -130,28 +114,23 @@ def upload_file():
             os.remove(file_path)
             logger.info(f"Temporary file deleted: {file_path}")
 
-# Function to process the uploaded PDF and create ChromaDB
 def process_pdf(file_path):
-    try:
-        loader = PyPDFLoader(file_path)
-        pages = loader.load_and_split()
-        logger.info(f"PDF loaded and split into {len(pages)} pages")
+    """Process the uploaded PDF and create ChromaDB."""
+    loader = PyPDFLoader(file_path)
+    pages = loader.load_and_split()
+    logger.info(f"PDF loaded and split into {len(pages)} pages")
 
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=2000,
-            chunk_overlap=100,
-            length_function=len,
-            is_separator_regex=False,
-        )
-        chunks = text_splitter.split_documents(pages)
-        logger.info(f"Document split into {len(chunks)} chunks")
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=2000,
+        chunk_overlap=100,
+        length_function=len,
+        is_separator_regex=False,
+    )
+    chunks = text_splitter.split_documents(pages)
+    logger.info(f"Document split into {len(chunks)} chunks")
 
-        db = initialize_chroma(chunks=chunks)
-
-        return {"chunks": len(chunks)}
-    except Exception as e:
-        logger.error(f"Error processing PDF: {e}")
-        raise
+    db = initialize_chroma(chunks=chunks)
+    return {"chunks": len(chunks)}
 
 @app.route('/query', methods=['POST'])
 def query():
@@ -168,9 +147,8 @@ def query():
 
         api_key = os.getenv("OPENAI_API_KEY")
         model = ChatOpenAI(api_key=api_key)
-        response = model.invoke(prompt)  # Use invoke instead of predict
+        response = model.invoke(prompt)
 
-        # Extract the response text from the model's response
         if isinstance(response, AIMessage):
             response_text = response.content
         else:
@@ -193,7 +171,7 @@ def reset():
 
 if __name__ == '__main__':
     try:
-        initialize_app()  # Initialize the app and clear directories before starting
+        initialize_app()
         app.run(debug=True)
     except Exception as e:
         logger.error(f"Error during app initialization: {e}")

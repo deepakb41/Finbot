@@ -1,17 +1,17 @@
+import numpy as np
+import faiss
+import os
+import tempfile
+import shutil
+import logging
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import os
-import shutil
+from dotenv import load_dotenv
+from langchain.schema import AIMessage, Document
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-import tempfile
-import logging
-from dotenv import load_dotenv
-from langchain.schema import AIMessage
-import numpy as np
-import faiss
 
 load_dotenv()
 
@@ -106,7 +106,10 @@ def process_pdf(file_path):
     # Generate embeddings for each chunk
     api_key = os.getenv("OPENAI_API_KEY")
     embedding_function = OpenAIEmbeddings(api_key=api_key)
-    embeddings = [embedding_function.embed(chunk.page_content) for chunk in chunks]
+    
+    # Convert text chunks into Documents
+    documents_chunked = [Document(page_content=chunk.page_content) for chunk in chunks]
+    embeddings = embedding_function.embed_documents(documents_chunked)
 
     # Convert embeddings to numpy array and add to Faiss index
     embeddings_np = np.array(embeddings).astype('float32')
@@ -124,7 +127,7 @@ def query():
         # Generate embedding for the query
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        query_embedding = embedding_function.embed(query_text).astype('float32').reshape(1, -1)
+        query_embedding = embedding_function.embed_documents([Document(page_content=query_text)])[0].astype('float32').reshape(1, -1)
 
         # Search Faiss index
         D, I = index.search(query_embedding, k=3)

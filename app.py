@@ -43,7 +43,7 @@ Answer the question based on the above context: {question}
 # Global variables
 faiss_index = None
 documents = []
-dimension = 0  # Initialize with a default value
+dimension = 1536  # Initialize with a default value
 
 def clear_upload_folder():
     """Clear upload folder and set permissions."""

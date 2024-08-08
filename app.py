@@ -43,7 +43,7 @@ Answer the question based on the above context: {question}
 # Global variables
 faiss_index = None
 documents = []
-dimension = 1536  # Initialize with a default value
+dimension = 1536  # Set embedding dimension to 1536
 
 def clear_upload_folder():
     """Clear upload folder and set permissions."""
@@ -53,24 +53,17 @@ def clear_upload_folder():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
 
-def check_embedding_dimension(embedding_function, sample_text):
-    embedding = embedding_function.embed_documents([sample_text])
-    return np.array(embedding).shape[1]
+def initialize_faiss_index():
+    """Initialize Faiss index with the set dimension."""
+    global faiss_index
+    faiss_index = faiss.IndexFlatL2(dimension)
+    logger.info(f"Initialized Faiss index with dimension: {dimension}")
 
+@app.before_first_request
 def initialize_app():
     """Initialize the application by clearing directories and setting up Faiss index."""
     clear_upload_folder()
-    global faiss_index, dimension
-
-    # Check embedding dimension
-    api_key = os.getenv("OPENAI_API_KEY")
-    embedding_function = OpenAIEmbeddings(api_key=api_key)
-    sample_text = "This is a sample text to determine embedding dimension."
-    dimension = check_embedding_dimension(embedding_function, sample_text)
-    logger.info(f"Determined embedding dimension: {dimension}")
-
-    # Initialize Faiss index
-    faiss_index = faiss.IndexFlatL2(dimension)
+    initialize_faiss_index()
 
 @app.route('/')
 def index():
@@ -131,10 +124,10 @@ def process_pdf(file_path):
         # Convert embeddings to numpy array and add to Faiss index
         embeddings_np = np.array(embeddings).astype('float32')
         logger.info(f"Shape of embeddings: {embeddings_np.shape}")  # Log the shape of embeddings
-        if embeddings_np.shape[1] != dimension:
-            raise ValueError(f"Embedding dimension mismatch: expected {dimension}, got {embeddings_np.shape[1]}")
         
         global faiss_index  # Ensure we are using the global index
+        if faiss_index is None:
+            initialize_faiss_index()
         logger.info(f"Type of faiss_index: {type(faiss_index)}")
         faiss_index.add(embeddings_np)
         documents.extend(chunks)
@@ -161,6 +154,8 @@ def query():
 
         # Search Faiss index
         global faiss_index  # Ensure we are using the global index
+        if faiss_index is None:
+            initialize_faiss_index()
         D, I = faiss_index.search(query_embedding_np, k=3)
         results = [documents[i] for i in I[0]]
 
@@ -188,7 +183,7 @@ def reset():
     try:
         clear_upload_folder()
         global faiss_index, documents
-        faiss_index = faiss.IndexFlatL2(dimension)  # Reinitialize Faiss index
+        initialize_faiss_index()  # Reinitialize Faiss index
         documents = []
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:

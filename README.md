@@ -34,6 +34,23 @@ A library for efficient similarity search and clustering of dense vectors, enabl
 5. **Query Handling**: Generates an embedding for the user query and retrieves the most relevant document chunks.
 6. **Answer Generation**: Uses the retrieved chunks to generate a contextually relevant answer.
 
+## Project Directory Structure
+
+The project directory is organised as follows:
+
+finbot/
+├── finenv/ # Virtual environment for Python dependencies
+├── static/ # Static files (e.g., CSS, JavaScript)
+├── templates/ # HTML templates for the Flask app
+├── .gitignore # Git ignore file
+├── Procfile # Configuration for deployment on Railway
+├── README.Rmd # README file in RMarkdown format
+├── app.py # Main Flask application file
+├── requirements.txt # Python dependencies
+├── runtime.txt # Python runtime version for deployment
+└── .env # Environment variables (should not be committed)
+
+
 ## Deployment
 
 The application is deployed on Railway. Railway provides a simple way to deploy, manage, and scale web applications with minimal configuration. The necessary configuration files (`Procfile`, `runtime.txt`) and environment variables are set up in the Railway project settings.

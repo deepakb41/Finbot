@@ -43,10 +43,8 @@ The application is deployed on Railway. Railway provides a simple way to deploy,
 
 ## Attribution
 
-The chatbot icon used in this project is sourced from [Flaticon](https://www.flaticon.com/):
-- Icon by [Freepik](https://www.flaticon.com/free-icons/chatbot) from [www.flaticon.com](https://www.flaticon.com/).
+The chatbot icon used in this project is sourced from [Flaticon](https://www.flaticon.com/free-icons/chatbot)
 
-
-Finbot is a powerful tool for analysing and extracting information from complex financial documents. By leveraging LangChain, OpenAI embeddings, and Faiss indexing, Finbot provides users with a robust solution for querying financial data. The integration of Retrieval-Augmented Generation ensures that the answers are both relevant and contextually accurate, making Finbot an invaluable asset for financial analysts, investors, and other stakeholders.
+Finbot is a tool for analysing and extracting information from complex financial documents. By leveraging LangChain, OpenAI embeddings, and Faiss indexing, Finbot provides users with a robust solution for querying financial data. The integration of Retrieval-Augmented Generation ensures that the answers are both relevant and contextually accurate, making Finbot an invaluable asset for financial analysts, investors, and other stakeholders.
 
 

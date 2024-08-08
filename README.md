@@ -38,17 +38,16 @@ A library for efficient similarity search and clustering of dense vectors, enabl
 
 The project directory is organised as follows:
 
-finbot/
-├── finenv/ # Virtual environment for Python dependencies
-├── static/ # Static files (e.g., CSS, JavaScript)
-├── templates/ # HTML templates for the Flask app
-├── .gitignore # Git ignore file
-├── Procfile # Configuration for deployment on Railway
-├── README.Rmd # README file in RMarkdown format
-├── app.py # Main Flask application file
-├── requirements.txt # Python dependencies
-├── runtime.txt # Python runtime version for deployment
-└── .env # Environment variables (should not be committed)
+- **finenv/**: The virtual environment directory containing Python dependencies.
+- **static/**: Directory for static files like CSS and JavaScript to style the web interface.
+- **templates/**: Contains HTML templates used by Flask to render web pages.
+- **.gitignore**: Specifies files and directories to be ignored by Git.
+- **Procfile**: Configuration file used by Railway for deploying the application.
+- **README.Rmd**: This README file in RMarkdown format.
+- **app.py**: The main application file where the Flask app and core logic reside.
+- **requirements.txt**: Lists all the Python packages required to run the application.
+- **runtime.txt**: Specifies the Python runtime version for deployment.
+- **.env**: Contains environment variables such as the OpenAI API key (not committed to version control).
 
 
 ## Deployment

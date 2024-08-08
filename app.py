@@ -40,10 +40,10 @@ Answer the question based only on the following context:
 Answer the question based on the above context: {question}
 """
 
-# Faiss index
-dimension = 768  # Assuming your embeddings are 768-dimensional
-index = faiss.IndexFlatL2(dimension)
+# Global variables
+faiss_index = None
 documents = []
+dimension = 0  # Initialize with a default value
 
 def clear_upload_folder():
     """Clear upload folder and set permissions."""
@@ -53,9 +53,24 @@ def clear_upload_folder():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
 
+def check_embedding_dimension(embedding_function, sample_text):
+    embedding = embedding_function.embed_documents([sample_text])
+    return np.array(embedding).shape[1]
+
 def initialize_app():
-    """Initialize the application by clearing directories."""
+    """Initialize the application by clearing directories and setting up Faiss index."""
     clear_upload_folder()
+    global faiss_index, dimension
+
+    # Check embedding dimension
+    api_key = os.getenv("OPENAI_API_KEY")
+    embedding_function = OpenAIEmbeddings(api_key=api_key)
+    sample_text = "This is a sample text to determine embedding dimension."
+    dimension = check_embedding_dimension(embedding_function, sample_text)
+    logger.info(f"Determined embedding dimension: {dimension}")
+
+    # Initialize Faiss index
+    faiss_index = faiss.IndexFlatL2(dimension)
 
 @app.route('/')
 def index():
@@ -104,18 +119,30 @@ def process_pdf(file_path):
     logger.info(f"Document split into {len(chunks)} chunks")
 
     # Generate embeddings for each chunk
-    api_key = os.getenv("OPENAI_API_KEY")
-    embedding_function = OpenAIEmbeddings(api_key=api_key)
-    
-    # Extract text from chunks and generate embeddings
-    texts = [chunk.page_content for chunk in chunks]
-    embeddings = embedding_function.embed_documents(texts)
+    try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        embedding_function = OpenAIEmbeddings(api_key=api_key)
+        
+        # Extract text from chunks and generate embeddings
+        texts = [chunk.page_content for chunk in chunks]
+        logger.info(f"Generating embeddings for {len(texts)} chunks...")
+        embeddings = embedding_function.embed_documents(texts)
 
-    # Convert embeddings to numpy array and add to Faiss index
-    embeddings_np = np.array(embeddings).astype('float32')
-    index.add(embeddings_np)
-    documents.extend(chunks)
-    
+        # Convert embeddings to numpy array and add to Faiss index
+        embeddings_np = np.array(embeddings).astype('float32')
+        logger.info(f"Shape of embeddings: {embeddings_np.shape}")  # Log the shape of embeddings
+        if embeddings_np.shape[1] != dimension:
+            raise ValueError(f"Embedding dimension mismatch: expected {dimension}, got {embeddings_np.shape[1]}")
+        
+        global faiss_index  # Ensure we are using the global index
+        logger.info(f"Type of faiss_index: {type(faiss_index)}")
+        faiss_index.add(embeddings_np)
+        documents.extend(chunks)
+    except Exception as e:
+        logger.error(f"Error during embedding or indexing: {str(e)}")
+        logger.error("Error details:", exc_info=True)  # Capture full stack trace
+        raise
+
     return {"chunks": len(chunks)}
 
 @app.route('/query', methods=['POST'])
@@ -127,10 +154,14 @@ def query():
         # Generate embedding for the query
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        query_embedding = embedding_function.embed_documents([query_text])[0].astype('float32').reshape(1, -1)
+        query_embedding = embedding_function.embed_documents([query_text])[0]
+
+        # Convert query_embedding to numpy array
+        query_embedding_np = np.array(query_embedding).astype('float32').reshape(1, -1)
 
         # Search Faiss index
-        D, I = index.search(query_embedding, k=3)
+        global faiss_index  # Ensure we are using the global index
+        D, I = faiss_index.search(query_embedding_np, k=3)
         results = [documents[i] for i in I[0]]
 
         context_text = "\n\n---\n\n".join([doc.page_content for doc in results])
@@ -149,14 +180,15 @@ def query():
         return jsonify({"response": response_text})
     except Exception as e:
         logger.error(f"Error during query processing: {e}")
+        logger.error("Error details:", exc_info=True)  # Capture full stack trace
         return jsonify({"error": "Failed to process query"}), 500
 
 @app.route('/reset', methods=['POST'])
 def reset():
     try:
         clear_upload_folder()
-        global index, documents
-        index = faiss.IndexFlatL2(dimension)
+        global faiss_index, documents
+        faiss_index = faiss.IndexFlatL2(dimension)  # Reinitialize Faiss index
         documents = []
         return jsonify({"status": "success", "message": "System reset successfully"})
     except Exception as e:

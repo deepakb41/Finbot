@@ -4,9 +4,6 @@ Finbot is a tool for analysing and extracting information from complex financial
 
 Experience Finbot in action: [Try the Deployed Chatbot](https://web-production-318a.up.railway.app/)
 
-## Overview
-Finbot is an advanced AI-powered chatbot designed to analyse corporate financial performance by processing 10-K and 10-Q financial documents. The primary objective of Finbot is to assist users in extracting pertinent financial information and responding to specific queries based on the content of these documents. Finbot leverages cutting-edge natural language processing (NLP) techniques and sophisticated machine learning models to provide precise and contextually relevant answers.
-
 ## Key Features
 - **AI-Driven Chatbot**: Utilises OpenAI's models to understand and generate human language.
 - **LangChain**: Integrated for managing prompts, handling document loading, and embedding text.

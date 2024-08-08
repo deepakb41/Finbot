@@ -64,6 +64,16 @@ def clear_upload_folder():
     except Exception as e:
         logger.error(f"Error clearing upload folder: {e}")
 
+# Function to ensure permissions are set correctly for ChromaDB files
+def set_chroma_db_permissions():
+    try:
+        for root, dirs, files in os.walk(CHROMA_PATH):
+            for file in files:
+                os.chmod(os.path.join(root, file), 0o666)
+                logger.info(f"Set writable permission for file: {file}")
+    except Exception as e:
+        logger.error(f"Error setting permissions for ChromaDB files: {e}")
+
 # Function to initialize ChromaDB
 def initialize_chroma(chunks=None):
     try:
@@ -75,11 +85,7 @@ def initialize_chroma(chunks=None):
             db = Chroma(embedding_function=embedding_function, persist_directory=CHROMA_PATH)
         logger.info("ChromaDB initialized successfully")
 
-        # Ensure the database files are writable
-        for root, dirs, files in os.walk(CHROMA_PATH):
-            for file in files:
-                os.chmod(os.path.join(root, file), 0o666)
-                logger.info(f"Set writable permission for file: {file}")
+        set_chroma_db_permissions()  # Ensure permissions are set correctly
 
         return db
     except Exception as e:

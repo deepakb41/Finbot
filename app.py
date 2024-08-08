@@ -107,9 +107,9 @@ def process_pdf(file_path):
     api_key = os.getenv("OPENAI_API_KEY")
     embedding_function = OpenAIEmbeddings(api_key=api_key)
     
-    # Convert text chunks into Documents
-    documents_chunked = [Document(page_content=chunk.page_content) for chunk in chunks]
-    embeddings = embedding_function.embed_documents(documents_chunked)
+    # Extract text from chunks and generate embeddings
+    texts = [chunk.page_content for chunk in chunks]
+    embeddings = embedding_function.embed_documents(texts)
 
     # Convert embeddings to numpy array and add to Faiss index
     embeddings_np = np.array(embeddings).astype('float32')
@@ -127,7 +127,7 @@ def query():
         # Generate embedding for the query
         api_key = os.getenv("OPENAI_API_KEY")
         embedding_function = OpenAIEmbeddings(api_key=api_key)
-        query_embedding = embedding_function.embed_documents([Document(page_content=query_text)])[0].astype('float32').reshape(1, -1)
+        query_embedding = embedding_function.embed_documents([query_text])[0].astype('float32').reshape(1, -1)
 
         # Search Faiss index
         D, I = index.search(query_embedding, k=3)

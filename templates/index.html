@@ -43,10 +43,12 @@
             <button id="resetButton" class="btn">Restart Chat</button>
         </div>
         <div class="links">
-            Sample 10-K Report for 2024:
-            <a href="https://www.sec.gov/ix?doc=/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm" target="_blank">Microsoft 10-K Report 2024</a>
+            Sample 10-K Report for Microsoft:
+            <a href="https://www.sec.gov/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm" target="_blank">Microsoft 10-K Report 2024</a>
             <br>Search for other 10-K and 10-Q documents:
             <a href="https://www.sec.gov/search-filings" target="_blank">SEC Search Filings</a>
+            <br>View this project on GitHub:
+            <a href="https://github.com/deepakb41/Finbot" target="_blank">GitHub Repository</a>
         </div>
     </div>
 
@@ -70,13 +72,15 @@
             formData.append('file', fileInput.files[0]);
 
             document.getElementById('progressWrapper').style.display = 'inline-flex';
+            appendMessage('bot', 'Uploading and processing the PDF...');
 
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/upload', true);
 
+            // Track the upload progress
             xhr.upload.onprogress = function(event) {
                 if (event.lengthComputable) {
-                    var percentComplete = (event.loaded / event.total) * 100;
+                    var percentComplete = (event.loaded / event.total) * 70; // Allocate 70% of the progress to upload
                     document.getElementById('progressBar').value = percentComplete;
                 }
             };
@@ -85,15 +89,25 @@
                 if (xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
                     if (data.status === 'success') {
-                        appendMessage('bot', data.message);
+                        // Simulate processing phase by gradually filling the remaining 30% of the progress bar
+                        let processingProgress = 70;
+                        let processingInterval = setInterval(function() {
+                            processingProgress += 2; // Increase progress by 2% every 100ms
+                            document.getElementById('progressBar').value = processingProgress;
+                            if (processingProgress >= 100) {
+                                clearInterval(processingInterval);
+                                appendMessage('bot', data.message);
+                                document.getElementById('progressWrapper').style.display = 'none';
+                            }
+                        }, 100);
                     } else {
                         appendMessage('bot', 'Failed to upload file. Please try again.');
+                        document.getElementById('progressWrapper').style.display = 'none';
                     }
                 } else {
                     appendMessage('bot', 'Error occurred: ' + xhr.statusText);
+                    document.getElementById('progressWrapper').style.display = 'none';
                 }
-                document.getElementById('progressBar').value = 0;
-                document.getElementById('progressWrapper').style.display = 'none';
             };
 
             xhr.send(formData);
@@ -129,8 +143,8 @@
             }).then(response => response.json())
               .then(data => {
                   if (data.status === 'success') {
-                      appendMessage('bot', data.message);
-                      document.getElementById('chatbox').innerHTML = '';
+                      document.getElementById('chatbox').innerHTML = ''; // Clear the chatbox
+                      appendMessage('bot', 'Welcome to Finbot! Upload a PDF to start.'); // Display welcome message again
                   } else {
                       appendMessage('bot', 'Failed to reset. Please try again.');
                   }

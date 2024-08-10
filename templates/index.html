@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finbot</title>
     <link rel="stylesheet" href="/static/style.css">
+    <!-- Include Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -22,51 +24,37 @@
                 </div>
             </div>
         </div>
-        <div class="upload-section">
-            <form id="uploadForm" enctype="multipart/form-data">
-                <label for="fileInput" class="custom-file-upload">
-                    <input type="file" name="file" id="fileInput">
-                    Select PDF File
-                </label>
-                <button type="submit" class="btn">Upload</button>
-                <div id="progressWrapper">
-                    <progress id="progressBar" value="0" max="100"></progress>
-                    <span id="processingText">Processing...</span>
-                </div>
-            </form>
-        </div>
         <div class="input-section">
-            <input type="text" id="queryInput" placeholder="Ask a question..." class="query-input">
-            <button id="queryButton" class="btn">Send</button>
-        </div>
-        <div class="reset-section">
-            <button id="resetButton" class="btn">Restart Chat</button>
+            <form id="uploadForm" enctype="multipart/form-data" class="input-form" onsubmit="return false;">
+                <label for="fileInput" class="custom-file-upload">
+                    <i class="fas fa-paperclip clip-icon"></i>
+                </label>
+                <input type="file" name="file" id="fileInput" style="display: none;">
+                <input type="text" id="queryInput" placeholder="Ask a question..." class="query-input">
+                <button id="queryButton" class="btn">Send</button>
+                <button id="resetButton" class="btn icon-btn" title="Restart Chat">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </form>
+            <div id="progressWrapper">
+                <progress id="progressBar" value="0" max="100"></progress>
+                <span id="processingText">Processing...</span>
+            </div>
         </div>
         <div class="links">
-            Sample 10-K Report for Microsoft:
-            <a href="https://www.sec.gov/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm" target="_blank">Microsoft 10-K Report 2024</a>
+            Sample 10-K Report for Microsoft (2024):
+            <a href="https://www.sec.gov/ix?doc=/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm" target="_blank">Microsoft 10-K Report 2024</a>
             <br>Search for other 10-K and 10-Q documents:
             <a href="https://www.sec.gov/search-filings" target="_blank">SEC Search Filings</a>
             <br>View this project on GitHub:
-            <a href="https://github.com/deepakb41/Finbot" target="_blank">GitHub Repository</a>
+            <a href="https://github.com/your-username/your-repo-name" target="_blank">GitHub Repository</a>
         </div>
     </div>
 
     <script>
-        function appendMessage(sender, message) {
-            var chatbox = document.getElementById('chatbox');
-            var messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', `message-${sender}`);
-            var messageContent = document.createElement('div');
-            messageContent.classList.add('message-content');
-            messageContent.innerText = message;
-            messageDiv.appendChild(messageContent);
-            chatbox.appendChild(messageDiv);
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
 
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault();
             var formData = new FormData();
             var fileInput = document.getElementById('fileInput');
             formData.append('file', fileInput.files[0]);
@@ -77,10 +65,9 @@
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/upload', true);
 
-            // Track the upload progress
             xhr.upload.onprogress = function(event) {
                 if (event.lengthComputable) {
-                    var percentComplete = (event.loaded / event.total) * 70; // Allocate 70% of the progress to upload
+                    var percentComplete = (event.loaded / event.total) * 70;
                     document.getElementById('progressBar').value = percentComplete;
                 }
             };
@@ -89,10 +76,9 @@
                 if (xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
                     if (data.status === 'success') {
-                        // Simulate processing phase by gradually filling the remaining 30% of the progress bar
                         let processingProgress = 70;
                         let processingInterval = setInterval(function() {
-                            processingProgress += 2; // Increase progress by 2% every 100ms
+                            processingProgress += 2;
                             document.getElementById('progressBar').value = processingProgress;
                             if (processingProgress >= 100) {
                                 clearInterval(processingInterval);
@@ -113,7 +99,9 @@
             xhr.send(formData);
         });
 
-        document.getElementById('queryButton').addEventListener('click', function() {
+        document.getElementById('queryButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
             var queryInput = document.getElementById('queryInput');
             var query = queryInput.value;
             queryInput.value = '';
@@ -134,7 +122,9 @@
               });
         });
 
-        document.getElementById('resetButton').addEventListener('click', function() {
+        document.getElementById('resetButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
             fetch('/reset', {
                 method: 'POST',
                 headers: {
@@ -143,8 +133,8 @@
             }).then(response => response.json())
               .then(data => {
                   if (data.status === 'success') {
-                      document.getElementById('chatbox').innerHTML = ''; // Clear the chatbox
-                      appendMessage('bot', 'Welcome to Finbot! Upload a PDF to start.'); // Display welcome message again
+                      document.getElementById('chatbox').innerHTML = ''; 
+                      appendMessage('bot', 'Welcome back to Finbot! Upload a PDF to start.');
                   } else {
                       appendMessage('bot', 'Failed to reset. Please try again.');
                   }
@@ -152,6 +142,18 @@
                   appendMessage('bot', 'Error occurred: ' + error.message);
               });
         });
+
+        function appendMessage(sender, message) {
+            var chatbox = document.getElementById('chatbox');
+            var messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `message-${sender}`);
+            var messageContent = document.createElement('div');
+            messageContent.classList.add('message-content');
+            messageContent.innerText = message;
+            messageDiv.appendChild(messageContent);
+            chatbox.appendChild(messageDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
     </script>
 </body>
 </html>

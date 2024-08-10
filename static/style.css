@@ -1,6 +1,7 @@
+/* Importing a modern, clean font */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    font-family: 'Poppins', sans-serif;
+    background-color: #d5e1c6;
     color: #333;
     margin: 0;
     padding: 0;
@@ -10,6 +11,7 @@ body {
     height: 100vh;
 }
 
+/* Container Styling */
 .container {
     display: flex;
     flex-direction: column;
@@ -17,16 +19,19 @@ body {
     max-width: 800px;
     height: 90vh;
     background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
     overflow: hidden;
 }
 
+/* Header Styling */
 .header {
     padding: 20px;
-    background-color: #4CAF50;
-    color: white;
+    background: linear-gradient(to right, #8bc34a, #4caf50);  /* Green gradient header */
+    color: #fff;
     text-align: center;
+    border-bottom: 2px solid #ddd;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
@@ -35,6 +40,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    font-weight: 600;
 }
 
 .header h1 .icon {
@@ -43,42 +49,18 @@ body {
     margin-right: 10px;
 }
 
-.description {
-    margin: 10px 0 0;
-    font-size: 1em;
-}
-
-.links {
-    padding: 10px;
-    background-color: #f4f4f9;
-    text-align: center;
-    font-size: 13px;
-}
-
-.links p {
-    margin: 5px 0;
-}
-
-.links a {
-    color: #4CAF50;
-    text-decoration: none;
-}
-
-.links a:hover {
-    text-decoration: underline;
-}
-
+/* Chatbox Styling */
 .chatbox {
     flex: 1;
-    padding: 10px;
+    padding: 20px;
     overflow-y: auto;
-    border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #ddd;
+    background-color: #f4f4f9;
 }
 
 .message {
     display: flex;
-    margin: 10px 0;
+    margin: 15px 0;
 }
 
 .message-user {
@@ -90,26 +72,33 @@ body {
 }
 
 .message-content {
-    max-width: 70%;
-    padding: 10px;
-    border-radius: 10px;
+    max-width: 75%;
+    padding: 15px;
+    border-radius: 20px;
+    font-size: 1em;
+    line-height: 1.5em;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .message-user .message-content {
     background-color: #4CAF50;
     color: white;
+    border-bottom-right-radius: 0;
 }
 
 .message-bot .message-content {
     background-color: #e1f5fe;
     color: #0277bd;
+    border-bottom-left-radius: 0;
 }
 
+/* Input Section Styling */
 .input-section {
-    padding: 10px;
-    border-top: 1px solid #ccc;
+    padding: 10px 20px;
+    background-color: #f7f7f7;
     display: flex;
     flex-direction: column;
+    border-top: 2px solid #ddd;
 }
 
 .input-form {
@@ -120,11 +109,13 @@ body {
 
 .query-input {
     flex: 1;
-    padding: 10px;
+    padding: 12px;
     margin-right: 10px;
     box-sizing: border-box;
-    border: 2px solid #ccc;
-    border-radius: 4px;
+    border: 2px solid #ddd;
+    border-radius: 25px;
+    font-size: 1em;
+    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .custom-file-upload {
@@ -146,35 +137,43 @@ body {
     transform: scale(1.1);
 }
 
+/* Button Styling */
 .btn {
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 25px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+.btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
 
 .icon-btn {
-    padding: 10px;
+    padding: 12px;
     background-color: transparent;
     border: none;
     cursor: pointer;
     color: #4CAF50;
-    font-size: 18px;
-    transition: color 0.2s, transform 0.2s;
+    font-size: 24px;
+    transition: color 0.3s ease, transform 0.2s ease;
 }
 
 .icon-btn:hover {
-    color: #45a049;
+    color: #ffffff;
     transform: scale(1.1);
 }
 
+/* Progress Bar Styling */
 #progressWrapper {
     display: none;
     align-items: center;
@@ -189,13 +188,13 @@ body {
     width: 100%;
     height: 15px;
     border-radius: 10px;
-    background-color: #f0f0f0;
+    background-color: #e0e0e0;
     overflow: hidden;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 #progressBar::-webkit-progress-bar {
-    background-color: #f0f0f0;
+    background-color: #e0e0e0;
     border-radius: 10px;
 }
 
@@ -222,4 +221,26 @@ body {
     margin-left: 10px;
     font-size: 14px;
     color: #666;
+}
+
+/* Links Styling */
+
+.links {
+    padding: 10px;
+    background-color: #f4f4f9;
+    text-align: center;
+    font-size: 13px;
+}
+
+.links p {
+    margin: 5px 0;
+}
+
+.links a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.links a:hover {
+    text-decoration: underline;
 }

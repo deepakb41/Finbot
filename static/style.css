@@ -26,7 +26,7 @@ body {
 
 /* Header Styling */
 .header {
-    padding: 20px;
+    padding: 10px;
     background: linear-gradient(to right, #8bc34a, #4caf50);  /* Green gradient header */
     color: #fff;
     text-align: center;
@@ -75,7 +75,7 @@ body {
     max-width: 75%;
     padding: 15px;
     border-radius: 20px;
-    font-size: 1em;
+    font-size: 14px;
     line-height: 1.5em;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
@@ -164,13 +164,13 @@ body {
     border: none;
     cursor: pointer;
     color: #4CAF50;
-    font-size: 24px;
+    font-size: 16px;
     transition: color 0.3s ease, transform 0.2s ease;
 }
 
 .icon-btn:hover {
-    color: #ffffff;
-    transform: scale(1.1);
+    background-color: #ffffff;
+    transform: translateY(-2px);
 }
 
 /* Progress Bar Styling */
@@ -186,7 +186,7 @@ body {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 15px;
+    height: 10px;
     border-radius: 10px;
     background-color: #e0e0e0;
     overflow: hidden;
@@ -223,24 +223,40 @@ body {
     color: #666;
 }
 
-/* Links Styling */
-
-.links {
-    padding: 10px;
-    background-color: #f4f4f9;
+/* Footer Links Styling */
+.footer-links {
+    width: 100%;
+    background-color: #d5e1c6;  /* Green background for the footer */
+    padding: 5px 0;
     text-align: center;
-    font-size: 13px;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    bottom: 0;
+    left: 0;
 }
 
-.links p {
-    margin: 5px 0;
-}
-
-.links a {
-    color: #4CAF50;
+.footer-links a {
+    color: rgb(0, 0, 0);
     text-decoration: none;
+    margin: 0 15px;
+    font-size: 12px;
+    transition: color 0.3s ease;
 }
 
-.links a:hover {
-    text-decoration: underline;
+.footer-links a:hover {
+    color: #0008ff;
+}
+
+.footer-links a::after {
+    content: "|";
+    margin-left: 15px;
+    color: #dddddd;
+}
+
+.footer-links a:last-child::after {
+    content: "";  /* Remove the pipe after the last link */
+}
+
+.footer-links a:last-child {
+    margin-right: 0; /* Adjust the right margin for the last link */
 }

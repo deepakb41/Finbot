@@ -27,7 +27,7 @@ body {
 /* Header Styling */
 .header {
     padding: 10px;
-    background: linear-gradient(to right, #8bc34a, #4caf50);  /* Green gradient header */
+    background: linear-gradient(to right, #8bc34a, #4caf50);
     color: #fff;
     text-align: center;
     border-bottom: 2px solid #ddd;
@@ -44,15 +44,15 @@ body {
 }
 
 .header h1 .icon {
-    width: 40px;
-    height: 40px;
+    width: 30px;  /* Reduced size for mobile */
+    height: 30px;
     margin-right: 10px;
 }
 
 /* Chatbox Styling */
 .chatbox {
     flex: 1;
-    padding: 20px;
+    padding: 10px; /* Reduced padding for mobile */
     overflow-y: auto;
     border-bottom: 1px solid #ddd;
     background-color: #f4f4f9;
@@ -60,7 +60,7 @@ body {
 
 .message {
     display: flex;
-    margin: 15px 0;
+    margin: 10px 0;
 }
 
 .message-user {
@@ -73,8 +73,8 @@ body {
 
 .message-content {
     max-width: 75%;
-    padding: 15px;
-    border-radius: 20px;
+    padding: 10px; /* Reduced padding for mobile */
+    border-radius: 15px; /* Slightly rounded corners */
     font-size: 14px;
     line-height: 1.5em;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -94,7 +94,7 @@ body {
 
 /* Input Section Styling */
 .input-section {
-    padding: 10px 20px;
+    padding: 10px 15px; /* Reduced padding for mobile */
     background-color: #f7f7f7;
     display: flex;
     flex-direction: column;
@@ -109,11 +109,11 @@ body {
 
 .query-input {
     flex: 1;
-    padding: 12px;
+    padding: 10px;
     margin-right: 10px;
     box-sizing: border-box;
     border: 2px solid #ddd;
-    border-radius: 25px;
+    border-radius: 20px;
     font-size: 1em;
     box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.05);
 }
@@ -127,7 +127,7 @@ body {
 }
 
 .clip-icon {
-    font-size: 24px;
+    font-size: 22px;  /* Adjusted size for mobile */
     color: #4CAF50;
     cursor: pointer;
     transition: transform 0.2s;
@@ -142,13 +142,13 @@ body {
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 12px 20px;
+    padding: 10px 15px; /* Reduced padding for mobile */
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: 14px;  /* Reduced font size for mobile */
     cursor: pointer;
-    border-radius: 25px;
+    border-radius: 20px;
     transition: background-color 0.3s ease, transform 0.2s ease;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
@@ -159,12 +159,12 @@ body {
 }
 
 .icon-btn {
-    padding: 12px;
+    padding: 10px; /* Adjusted padding for mobile */
     background-color: transparent;
     border: none;
     cursor: pointer;
     color: #4CAF50;
-    font-size: 16px;
+    font-size: 14px;  /* Adjusted size for mobile */
     transition: color 0.3s ease, transform 0.2s ease;
 }
 
@@ -186,8 +186,8 @@ body {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 10px;
-    border-radius: 10px;
+    height: 8px;  /* Reduced height for mobile */
+    border-radius: 8px;
     background-color: #e0e0e0;
     overflow: hidden;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -195,38 +195,38 @@ body {
 
 #progressBar::-webkit-progress-bar {
     background-color: #e0e0e0;
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 #progressBar::-webkit-progress-value {
     background-color: #4CAF50;
-    border-radius: 10px 0 0 10px;
+    border-radius: 8px 0 0 8px;
     transition: width 0.2s ease-in-out;
 }
 
 #progressBar::-moz-progress-bar {
     background-color: #4CAF50;
-    border-radius: 10px;
+    border-radius: 8px;
     transition: width 0.2s ease-in-out;
 }
 
 #progressBar::-ms-fill {
     background-color: #4CAF50;
-    border-radius: 10px;
+    border-radius: 8px;
     transition: width 0.2s ease-in-out;
 }
 
 #processingText {
     display: none;
     margin-left: 10px;
-    font-size: 14px;
+    font-size: 12px;  /* Reduced font size for mobile */
     color: #666;
 }
 
 /* Footer Links Styling */
 .footer-links {
     width: 100%;
-    background-color: #d5e1c6;  /* Green background for the footer */
+    background-color: #d5e1c6;
     padding: 5px 0;
     text-align: center;
     box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
@@ -238,8 +238,8 @@ body {
 .footer-links a {
     color: rgb(0, 0, 0);
     text-decoration: none;
-    margin: 0 15px;
-    font-size: 12px;
+    margin: 0 10px;  /* Reduced margin for mobile */
+    font-size: 12px;  /* Adjusted font size for mobile */
     transition: color 0.3s ease;
 }
 
@@ -249,7 +249,7 @@ body {
 
 .footer-links a::after {
     content: "|";
-    margin-left: 15px;
+    margin-left: 10px;
     color: #dddddd;
 }
 
@@ -259,4 +259,31 @@ body {
 
 .footer-links a:last-child {
     margin-right: 0; /* Adjust the right margin for the last link */
+}
+
+/* Media Queries for Mobile Responsiveness */
+@media screen and (max-width: 600px) {
+    .header h1 {
+        font-size: 1.5em;  /* Adjusted header font size for mobile */
+    }
+
+    .header h1 .icon {
+        width: 25px;  /* Further reduced size for mobile */
+        height: 25px;
+    }
+
+    .message-content {
+        padding: 10px;
+        font-size: 13px;  /* Adjusted font size for message content */
+    }
+
+    .query-input {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .btn, .icon-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
 }

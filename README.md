@@ -3,6 +3,8 @@
 Finbot is a tool for analysing and extracting information from complex financial documents. By leveraging LangChain, OpenAI embeddings, and Faiss indexing, Finbot provides users with a robust solution for querying financial data. The integration of Retrieval-Augmented Generation ensures that the answers are both relevant and contextually accurate, making Finbot an invaluable asset for financial analysts, investors, and other stakeholders.
 
 Experience Finbot in action: [Try the Deployed Chatbot](https://web-production-318a.up.railway.app/)
+**Click on the DEMO file above to view the UI**
+
 
 ## Key Features
 - **AI-Driven Chatbot**: Utilises OpenAI's models to understand and generate human language.

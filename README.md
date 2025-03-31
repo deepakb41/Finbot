@@ -4,7 +4,7 @@ Finbot is a tool for analysing and extracting information from complex financial
 
 Experience Finbot in action: [Try the Deployed Chatbot](https://web-production-318a.up.railway.app/)
 
-**Click on the DEMO file above to view the UI**
+**Click on the DEMO file in the repository to view the UI**
 
 
 ## Key Features
